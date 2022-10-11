@@ -80,7 +80,10 @@ The Travelmate package is a wlan connection manager for travel routers. Travelma
 If you used option 1 or did not include the Travelmate package, when customising the install package (option 3), then you will need to install Travelmate. You can do this vis the browser interface (LuCi): `System` > `Software`
 Search for “travelmate” and install `travelmate` and `luci-app-travelmate`. Then `Reboot` and follow the instructions above.
 ## MWAN3			
-
+The mwan3 package provides outbound WAN traffic load balancing or fail-over with multiple WAN interfaces. It can monitor wan, gsm and wifi extended internet connections, providing policy based routing. 
+Mwan3 documentation and installation instructions can be found [here](https://openwrt.org/docs/guide-user/network/wan/multiwan/mwan3). It is beyond the scope of this document to provide mwan3 parameters, but the instructions above are pretty clear.
+If you used option 1 or did not include the mwan3 package, when customising the install package (option 3), then you will need to install mwan3. You can do this vis the browser interface (LuCi): `System` > `Software`
+Search for “travelmate” and install `mwan3` and `luci-app-mwan3`. Then `Reboot` and follow the instructions above.
 # GPS
 I've developed a couple of shell scripts to provide GPS information.		
 ## SMS GPS script (smsgps.sh)

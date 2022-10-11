@@ -76,19 +76,19 @@ If you want to tether your iPhone via the USB interface, follow the following in
 		- 	`General Settings` > `Name: iPhone`; `Protocol: "DHCP Client"`; `Device: "eth1"`
 		-	`Firewall Settings: Assign: "wan"`
 ## Travelmate
-The Travelmate package is a wlan connection manager for travel routers. EIt provides a number of useful features to connect to a local wlan as an alternative to using your GSM connection (WiFi extender). Trevelmate documataition and installation instructions can be found [here](https://forum.openwrt.org/t/travelmate-support-thread/5155)
-If you used option 1 or did not include the Travelmate package, when customizing the install package (option 3), then you will need to install Travelmate. You can do this vis the browser interface (Luci): `System` > `Software`
+The Travelmate package is a wlan connection manager for travel routers. Travelmate provides a number of useful features to connect to a local wlan as an alternative to using your GSM connection (WiFi extender). Travelmate documentation and installation instructions can be found [here](https://forum.openwrt.org/t/travelmate-support-thread/5155)
+If you used option 1 or did not include the Travelmate package, when customising the install package (option 3), then you will need to install Travelmate. You can do this vis the browser interface (LuCi): `System` > `Software`
 Search for “travelmate” and install `travelmate` and `luci-app-travelmate`. Then `Reboot` and follow the instructions above.
 ## MWAN3			
 
 # GPS
 I've developed a couple of shell scripts to provide GPS information.		
 ## SMS GPS script (smsgps.sh)
-smsgps is a script that provides GPS cooridinates of the location of the router (caravan or mobile home) by sending an SMS message to the router. 
+smsgps is a script that provides GPS coordinates of the location of the router (caravan or mobile home) by sending an SMS message to the router. 
 To obtain GPS coordinates:
 -	From a mobile phone send the SMS message `GPS` to the mobile number of the SIM installed in the router.
 -	Within a few seconds the router will respond via SMS with a google maps link with coordinates.
--	Clicking the SMS response will display the location of the router (caravan or modile home) in Google Maps.
+-	Clicking the SMS response will display the location of the router (caravan or mobile home) in Google Maps.
 ### Installation Instructions
 1.	If you installed the firmware using option 1 above then you will need to install the `socat` module. Install required coreutil via browser interface (LuCi): 'System' > 'Software'. Install 'socat'
 2.	Using Terminal (or similar program):
@@ -98,11 +98,11 @@ To obtain GPS coordinates:
 	- 	Copy Config file to router `scp ./smsgps.conf root@192.168.8.1:/etc/config/smsgps`
 3.	Log into Router via SSH and issue the following commands
 	-	`chmod 755 /root/smsgps.sh` 	# set access level
-	-	`chmod 755 /etc/init.d/smsgps`	# set accesslevel
+	-	`chmod 755 /etc/init.d/smsgps`	# set access level
 	-	`/etc/init.d/smsgps enable`		# initialise as a started task
 	-	`/etc/init.d/smsgps start`		# Start the script
 ## GPS tracking script (trackgps.sh)
-Trackgps is a script that tracks the movement of the router (motor home or caravan) and produces a GPX file that can be displayed via Google Maps of a similar program (e.g. GPXsee). THe user has an accurate record of their journey, including location, path, time elevation and waypoints.
+Trackgps is a script that tracks the movement of the router (motor home or caravan) and produces a GPX file that can be displayed via Google Maps of a similar program (e.g. GPXsee). The user has an accurate record of their journey, including location, path, time elevation and waypoints.
 TrackGPX emails the GPX file when larger than a specified size or when when the router boots or via a command (see below).
 Trackgps can be:
 -	stopped by sending the SMS message `stop tracking` to the mobile number of the SIM in the router  
@@ -121,7 +121,7 @@ Trackgps can be:
 	-	Copy Service (procd script) to router: `scp ./trackgps root@192.168.8.1:/etc/init.d/trackgps`
 4.	Log into Router via SSH and issue the following commands
 	-	`chmod 755 /root/trackgps.sh` 		# set access level
-	-	`chmod 755 /etc/init.d/trackgps`	# set accesslevel
+	-	`chmod 755 /etc/init.d/trackgps`	# set access level
 	-	`/etc/init.d/trackgps enable`		# initialise as a started task
 	-	`/etc/init.d/reackgps start`		# Start the script
 # Appendix

@@ -44,7 +44,7 @@ slog() {
 }
 # Send AT commands to modem and capture response
 atsend() {
-	ATLONG=$(echo -e $1 | socat - $DEV,crnl)
+	ATLONG=$(echo -e $1 | socat - $DEV,crnl,echo=0)
 	ATRESP=${ATLONG//[$'\r\n ']}
 	if [ "$ATRESP" = "" ]; then
 		ATRESP="***ERROR - No Response***"	

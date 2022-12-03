@@ -147,8 +147,6 @@ wptType() {								# Write GPX location
 PROGNAME=${0##*/}						# Get Program Name
 exec 3< $DEV							# Set up file descriptor
 
-slog 2 "Task Started"
-
 if [ "$#" -ge 1 ]; then					# Initialise Logging level if there is a parameter
 	if [ $(echo $1 | grep -iE "^(0|1|2|3)$" ) ]; then
 		LOGLEVEL=$1
@@ -157,7 +155,9 @@ if [ "$#" -ge 1 ]; then					# Initialise Logging level if there is a parameter
 		slog 2 "Invalid Parameter - Ignored"
 	fi
 fi
+
 sleep 60									# Wait for Router to initialise
+slog 2 "Task Started"
 
 readNMEA									# Read first record
 

@@ -35,7 +35,7 @@ MAILSMTP="mail.xxxx.com.au"			# SMTP server to use for sending emails
 MAILUSER="username"					# UserID used to log into SMTP server			
 MAILPASS="password"					# Password of Userid to log into server
 
-LASTTIME=0							# Last recorded Time
+LASTTIASTTIME=0							# Last recorded Time
 LASTLONG=0							# Last recorded Longitude
 LASTLAT=0							# Last recorded Latitude
 
@@ -56,47 +56,52 @@ slog() {
 
 # Modem Reader routine
 readNMEA () {						# NMEA Read  - only read valid records
-	while IFS=, read -u 3 NTYPE NTIME NLAT NNS NLONG NWE NQI NSV NHDOP NELE NREST
-	do	
-		if [ "$NTYPE" = "\$GPGGA" ] 	# Only process GPGGA records
-		then
-		# Validate Values NTIME NLAT and NLONG
-		if [ $(echo $NTIME | grep -iE $GRNTIME ) ] &&
-			[ $(echo $NLAT | grep -iE $GRNLAT ) ] &&
-			[ $(echo $NLONG | grep -iE $GRNLONG ) ]
+	while true; do					# Keep reading records until you have a trackpoint or waypoint
+		while IFS=, read -u 3 NTYPE NTIME NLAT NNS NLONG NWE NQI NSV NHDOP NELE NREST
+		do	
+			if [ "$NTYPE" = "\$GPGGA" ] 	# Only process GPGGA records
 			then
-				NTIMED=$( echo ${NTIME%.*} | grep -oE "[^0]\d+" )	#Strip leading zeros
-#				NTIMED=${NTIME#"${NTIME%%[!0]*}"}					#Strip leading zeros
+			# Validate Values NTIME NLAT and NLONG
+			if [ $(echo $NTIME | grep -iE $GRNTIME ) ] &&
+				[ $(echo $NLAT | grep -iE $GRNLAT ) ] &&
+				[ $(echo $NLONG | grep -iE $GRNLONG ) ]
+				then
+					NTIMED=$( echo ${NTIME%.*} | grep -oE "[^0]\d+" )	#Strip leading zeros
 # Need to convert to degrees from degrees minutes
-				NLATALL=${NLAT//.}			#remove decimal point
-				NLATDO=$(( ${NLATALL%????????} * 1000000 ))			# Degrees Only
-				NLATD=$(( (${NLATALL%??} - $NLATDO) * 10 / 6 + $NLATDO )) 
-				NLONGALL=${NLONG//.}		#remove decimal point
-				NLONGDO=$(( ${NLONGALL%????????} * 1000000 ))		# Degrees Only
-				NLONGD=$(( (${NLONGALL%??} - $NLONGDO) * 10 / 6 + $NLONGDO ))
+					NLATALL=${NLAT//.}			#remove decimal point
+					NLATDO=$(( ${NLATALL%????????} * 1000000 ))			# Degrees Only
+					NLATD=$(( (${NLATALL%??} - $NLATDO) * 10 / 6 + $NLATDO )) 
+					NLONGALL=${NLONG//.}		#remove decimal point
+					NLONGDO=$(( ${NLONGALL%????????} * 1000000 ))		# Degrees Only
+					NLONGD=$(( (${NLONGALL%??} - $NLONGDO) * 10 / 6 + $NLONGDO ))
+# Calculate if we have moved more than $MINDIST				
+					NLONGDA=$(( $NLONGD - $LASTLONG ))
+					NLATDA=$(( $NLATD - $LASTLAT ))
+					NDISTSQ=$(( ($NLONGDA * $NLONGDA ) + ($NLATDA * $NLATDA) ))
+					if [ $NDISTSQ -ge $MINDISTSQ ] ; then
+						slog 0 "Distance exceeded: $NDISTSQ > $MINDISTSQ"
+						slog 0 "                 : $NLATDA ($NLATD - $LASTLAT > $MINDIST)"
+						slog 0 "                 : $NLONGDA ($NLONGD - $LASTLONG > $MINDIST)"
+						notmoving=false
+						return				#return to main routine
+					fi
+# If we are in a waypoint, keep looping until we move
+					if $notmoving; then
+						break
+					fi
 # Check if we have not moved for $WPTTIME				
-				NTIMEDA=$(( $NTIMED - $LASTTIME ))
-				if [ $NTIMEDA -lt 0 ]; then
-					NTIMEDA=$(( $NTIMEDA + 240000 ))		# crossed over to another day
-				fi
-				if [ $NTIMEDA -ge $WPTTIME ]; then			# Waypoint Detected
-					slog 0 "Waypoint: $NTIMEDA ($NTIMED - $LASTTIME > $WPTTIME)"
-					notmoving=true
-					break
-				fi
-#	Calculate if we have moved moved than $MINDIST				
-				NLONGDA=$(( $NLONGD - $LASTLONG ))
-				NLATDA=$(( $NLATD - $LASTLAT ))
-				NDISTSQ=$(( ($NLONGDA * $NLONGDA ) + ($NLATDA * $NLATDA) ))
-				if [ $NDISTSQ -ge $MINDISTSQ ] ; then
-					slog 0 "Distance exceeded: $NDISTSQ > $MINDISTSQ"
-					slog 0 "                 : $NLATDA ($NLATD - $LASTLAT > $MINDIST)"
-					slog 0 "                 : $NLONGDA ($NLONGD - $LASTLONG > $MINDIST)"
-					notmoving=false
-					break				#return to main routine
+					NTIMEDA=$(( $NTIMED - $LASTTIME ))
+					if [ $NTIMEDA -lt 0 ]; then
+						NTIMEDA=$(( $NTIMEDA + 240000 ))		# crossed over to another day
+					fi
+					if [ $NTIMEDA -ge $WPTTIME ]; then			# Waypoint Detected
+						slog 0 "Waypoint: $NTIMEDA ($NTIMED - $LASTTIME > $WPTTIME)"
+						notmoving=true	# Flag we are at waypoint					
+						return
+					fi
 				fi
 			fi
-		fi
+		done
 	done
 }	
 
@@ -122,25 +127,27 @@ emailfiles() {							# Email all outstanding Log Files
 
 writeWPT() {							# Write GPX Waypoint record
 	slog 0 "Write Waypoint record"	
-	wptType "<wpt"						# write Waypoint Record
-	echo -e "   <name>Waypoint $( date -u +%d-%m-%Y )</name>\n</wpt>" >>$GPXFILE # Write name	
-	LASTTIME=$NTIMED					# Update last waypoint time
+	wrtType "<wpt"						# write Waypoint Record
+	echo -e "   <name>Waypoint $( date -u +%d-%m-%Y )</name>\n</wpt>" >>$GPXFILE # Write name		
+	notmoving=true						# Flag we are in a waypoint
 }
 
 writeTRK() {							# Write GPX tracking record
 	slog 0 "Write Track record"
-	wptType "  <trkpt"
+	wrtType "  <trkpt"
 	echo -e "  </trkpt>" >> $GPXFILE
+	notmoving=false						# Flag we are in a moving	
 }
 
-wptType() {								# Write GPX location
+wrtType() {								# Write GPX location
 	slog 0 "Write $1 GPX record"
 	echo -e "$1 lat=\"-${NLATD%??????}.${NLATD: -6}\" lon=\"${NLONGD%??????}.${NLONGD: -6}\">" >> $GPXFILE
 	echo -e "   <ele>$NELE</ele>" >> $GPXFILE						# Write Elevation
 	echo -e "   <time>$( date -u +%Y-%m-%dT%TZ )</time>" >>$GPXFILE 	# Write Date and Time
 	echo -e "   <sat>$NSV</sat>\n   <hdop>$NHDOP</hdop>" >> $GPXFILE
-	LASTLONG=$NLONGD
-	LASTLAT=$NLATD
+	LASTLONG=$NLONGD					# Record last written longitude
+	LASTLAT=$NLATD						# Record last written latitude
+	LASTTIME=$NTIMED					# Record last written time
 }
 
 # Main Program
@@ -164,7 +171,7 @@ readNMEA									# Read first record
 while true; do    								# Main Loop
 	if [ -f $GPXFILE ]; then				# Check if GPX file exits
 		slog 2 "Closing GPX Tracking FIle"	# Close existing Log file and email it
-		echo $' </trkseg>\n</trk>\n</gpx>'  >> $GPXFILE	
+		echo -e " </trkseg>\n</trk>\n</gpx>"  >> $GPXFILE	
 		mv "$GPXFILE" "${GPXFILE%.*}.$( date +%Y%m%d%H%M ).gpx" 	# Rename File
 		emailfiles							# Email out files
 	fi
@@ -177,16 +184,16 @@ while true; do    								# Main Loop
 
 	while true ; do							# Waypoint Loop
 		writeWPT 
-		echo -e "<trk>\n <name>Segment $( date -u +%d-%m-%Y )</name>\n <trkseg>"  >> $GPXFILE	# Open Track segment	
+		echo -e "<trk>\n <name>Segment $( date -u +%d-%m-%Y )</name>\n <trkseg>"  >> $GPXFILE	# Start new segment
 		
 		FILESIZE=$( wc -c $GPXFILE| awk '{print $1}' )	# check file size
 		if [ $FILESIZE -gt $GPXMAX ]; then
 			break							# Close off GPX and start a new
 		fi
-		while $notmoving ; do
-			readNMEA
-		done
-		while true ; do						# We re moving - record track segment
+				
+		readNMEA							# Read next record after waypoint
+
+		while true ; do						# We are moving - record track segment
 			writeTRK		
 			readNMEA
 			if $notmoving ; then			# Detected we are at a waypoint

@@ -35,7 +35,7 @@ MAILSMTP="mail.xxxx.com.au"			# SMTP server to use for sending emails
 MAILUSER="username"					# UserID used to log into SMTP server			
 MAILPASS="password"					# Password of Userid to log into server
 
-LASTTIASTTIME=0							# Last recorded Time
+LASTTIME=0							# Last recorded Time
 LASTLONG=0							# Last recorded Longitude
 LASTLAT=0							# Last recorded Latitude
 
@@ -163,7 +163,7 @@ if [ "$#" -ge 1 ]; then					# Initialise Logging level if there is a parameter
 	fi
 fi
 
-sleep 60									# Wait for Router to initialise
+# sleep 60									# Wait for Router to initialise
 slog 2 "Task Started"
 
 readNMEA									# Read first record

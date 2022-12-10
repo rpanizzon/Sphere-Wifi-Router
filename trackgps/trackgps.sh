@@ -66,7 +66,7 @@ readNMEA () {						# NMEA Read  - only read valid records
 				[ $(echo $NLAT | grep -iE $GRNLAT ) ] &&
 				[ $(echo $NLONG | grep -iE $GRNLONG ) ]
 				then
-					NTIMED=$( echo ${NTIME%.*} | grep -oE "[^0]\d+" )	#Strip leading zeros
+					NTIMED=$( echo ${NTIME%.*} | grep -oE "[^0]\d*" )	#Strip leading zeros
 # Need to convert to degrees from degrees minutes
 					NLATALL=${NLAT//.}			#remove decimal point
 					NLATDO=$(( ${NLATALL%????????} * 1000000 ))			# Degrees Only

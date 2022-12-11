@@ -46,6 +46,7 @@ MINDISTSQ=$(( $MINDIST * $MINDIST ))
 GRNTIME="[0-2][0-9][0-5][0-9][0-5][0-9].00"
 GRNLAT="\d{4}.\d{6}"
 GRNLONG="\d{5}.\d{6}"
+GRNTFIX="(0\.|[^0]\d*\.)"
 
 # Logging Routine
 slog() {
@@ -66,7 +67,7 @@ readNMEA () {						# NMEA Read  - only read valid records
 				[ $(echo $NLAT | grep -iE $GRNLAT ) ] &&
 				[ $(echo $NLONG | grep -iE $GRNLONG ) ]
 				then
-					NTIMED=$( echo ${NTIME%.*} | grep -oE "[^0]\d*" )	#Strip leading zeros
+					NTIMED=$( echo $NTIME | grep -oE $GRNTFIX | grep -oE "\d*" )	#Strip leading zeros and decimal point
 # Need to convert to degrees from degrees minutes
 					NLATALL=${NLAT//.}			#remove decimal point
 					NLATDO=$(( ${NLATALL%????????} * 1000000 ))			# Degrees Only
